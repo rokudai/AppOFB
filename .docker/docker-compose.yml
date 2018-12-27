@@ -1,0 +1,57 @@
+version: "3.6"
+
+services:
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - laravel_dev
+
+  database:
+    container_name: mysql
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password --sql-mode=""
+    restart: always
+    environment:
+      MYSQL_DATABASE: homestead
+      MYSQL_ROOT_PASSWORD: homestead
+    ports:
+      - "3306:3306"
+    networks:
+      - laravel_dev
+
+  api:
+    container_name: laravel
+    image: registry.gitlab.com/nepuntobiz/nemobile/realestate/re-api-v1:develop
+    command: php artisan serve --host=0.0.0.0
+    build:
+      context: ../
+      target: develop
+      dockerfile: .docker/Dockerfile
+    environment:
+      APP_ENV: debug
+      APP_KEY: base64:B5FVrmyBQUyunACZ3lc3ACIWASkJ1i71oRALpmzJI5k=
+      APP_DEBUG: "true"
+      APP_LOG_LEVEL: debug
+      APP_URL: http://localhost
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_DATABASE: homestead
+      DB_USERNAME: root
+      DB_PASSWORD: homestead
+    volumes:
+      - ..:/var/www
+    ports:
+      - "0.0.0.0:8000:8000"
+    networks:
+      - laravel_dev
+    depends_on:
+      - database
+      - adminer
+
+networks:
+  laravel_dev:
